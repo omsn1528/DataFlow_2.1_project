@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.DataFlow" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_light</item>
+    </style>
+    <style name="Theme.DataFlow.Light" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_light</item>
+    </style>
+    <style name="Theme.DataFlow.Dark" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_dark</item>
+    </style>
+    <style name="DfSheetAnim">
+        <item name="android:windowEnterAnimation">@anim/sheet_in</item>
+        <item name="android:windowExitAnimation">@anim/sheet_out</item>
+    </style>
+</resources>

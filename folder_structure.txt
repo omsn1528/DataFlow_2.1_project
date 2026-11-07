@@ -1,0 +1,79 @@
+Folder PATH listing
+Volume serial number is D488-BD33
+C:.
+|   .gitignore
+|   build.gradle.kts
+|   folder_structure.txt
+|   gradle.properties
+|   keystore.properties.example
+|   local.properties
+|   PRIVACY.md
+|   README.md
+|   README.txt
+|   settings.gradle.kts
+|   
++---.github
+|   \---workflows
+|           release.yml
+|           
++---.idea
+|   |   .gitignore
+|   |   AndroidProjectSystem.xml
+|   |   gradle.xml
+|   |   misc.xml
+|   |   runConfigurations.xml
+|   |   vcs.xml
+|   |   workspace.xml
+|   |   
+|   \---caches
+|           deviceStreaming.xml
+|           
++---app
+|   |   build.gradle.kts
+|   |   proguard-rules.pro
+|   |   
+|   \---src
+|       \---main
+|           |   AndroidManifest.xml
+|           |   
+|           +---kotlin
+|           |   \---app
+|           |       \---viday
+|           |               Core.kt
+|           |               Db.kt
+|           |               Eng.kt
+|           |               MainActivity.kt
+|           |               Receivers.kt
+|           |               Ui.kt
+|           |               
+|           \---res
+|               +---anim
+|               |       sheet_in.xml
+|               |       sheet_out.xml
+|               |       
+|               +---drawable
+|               |       ic_launcher_foreground.xml
+|               |       ic_launcher_mono.xml
+|               |       ic_logo.xml
+|               |       ic_stat.xml
+|               |       splash_dark.xml
+|               |       splash_light.xml
+|               |       
+|               +---mipmap-anydpi-v26
+|               |       ic_launcher.xml
+|               |       ic_launcher_round.xml
+|               |       
+|               +---values
+|               |       colors.xml
+|               |       strings.xml
+|               |       themes.xml
+|               |       
+|               \---values-night
+|                       themes.xml
+|                       
+\---gradle
+    |   gradle-daemon-jvm.properties
+    |   
+    \---wrapper
+            gradle-wrapper.properties
+            
