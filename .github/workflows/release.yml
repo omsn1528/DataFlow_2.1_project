@@ -1,23 +1,83 @@
-name: Build signed release (AAB + APK)
+name: DataFlow build
+
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
+    inputs:
+      signed:
+        description: "Also build the SIGNED release (needs the four signing secrets)"
+        type: boolean
+        default: false
 
 jobs:
-  build:
+  verify:
+    name: Unsigned compile and verification
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: 17 }
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # packages: '' stops the action from installing its default list ("tools platform-tools"),
+      # because the standalone "tools" package no longer exists.
       - uses: android-actions/setup-android@v3
-      - name: Install SDK platform and build tools
-        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+        with:
+          packages: ''
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+
       - uses: gradle/actions/setup-gradle@v4
-        with: { gradle-version: 8.11.1 }
+        with:
+          gradle-version: 8.11.1
+
+      # No signing variables are set here, so the release outputs are unsigned (never debug-signed).
+      - name: Compile debug APK, unsigned release APK and unsigned release AAB
+        run: gradle --no-daemon assembleDebug assembleRelease bundleRelease
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DataFlow-unsigned-verification
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/bundle/release/*.aab
+
+  release:
+    name: Signed release (manual)
+    needs: verify
+    if: github.event_name == 'workflow_dispatch' && inputs.signed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: ''
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.11.1
+
       - name: Decode upload keystore
         env:
           KS_B64: ${{ secrets.KEYSTORE_BASE64 }}
-        run: echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/dataflow-upload.jks"
+        run: |
+          if [ -z "$KS_B64" ]; then echo "::error::Signing secrets are not configured"; exit 1; fi
+          echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/dataflow-upload.jks"
+
       - name: Build signed AAB and APK
         env:
           DATAFLOW_KEYSTORE_FILE: ${{ runner.temp }}/dataflow-upload.jks
@@ -25,18 +85,21 @@ jobs:
           DATAFLOW_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           DATAFLOW_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: gradle --no-daemon bundleRelease assembleRelease
+
       - name: Checksums
         run: |
           mkdir -p dist
           cp app/build/outputs/bundle/release/*.aab dist/
           cp app/build/outputs/apk/release/*.apk dist/
           cd dist && sha256sum * > SHA256SUMS && cat SHA256SUMS
-      - name: Print signing certificate fingerprint (public information)
+
+      - name: Public certificate fingerprint
         env:
           KS_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
           KS_ALIAS: ${{ secrets.KEY_ALIAS }}
-        run: keytool -list -v -keystore "$RUNNER_TEMP/dataflow-upload.jks" -alias "$KS_ALIAS" -storepass "$KS_PASS" | grep -E "SHA1|SHA256|Owner|Valid"
+        run: keytool -list -v -keystore "$RUNNER_TEMP/dataflow-upload.jks" -alias "$KS_ALIAS" -storepass "$KS_PASS" | grep -E "Owner|Valid|SHA1|SHA256"
+
       - uses: actions/upload-artifact@v4
         with:
-          name: DataFlow-release
+          name: DataFlow-signed-release
           path: dist/*
